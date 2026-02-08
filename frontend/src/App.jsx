@@ -18,7 +18,18 @@ function PrivateRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
   if (loading) {
     return (
-      <div className="loading-wrap">
+      <div
+        className="loading-wrap"
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '1rem',
+        }}
+      >
+        <span style={{ fontSize: '2.5rem' }}>🌱</span>
         <div className="loading-spinner" aria-hidden />
         <p>Loading...</p>
       </div>
@@ -32,7 +43,18 @@ function PublicRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
   if (loading) {
     return (
-      <div className="loading-wrap">
+      <div
+        className="loading-wrap"
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '1rem',
+        }}
+      >
+        <span style={{ fontSize: '2.5rem' }}>🌱</span>
         <div className="loading-spinner" aria-hidden />
         <p>Loading...</p>
       </div>

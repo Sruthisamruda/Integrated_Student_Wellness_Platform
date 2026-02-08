@@ -1,6 +1,5 @@
 /**
  * Mood Tracker: MoodPicker to log today's mood, list of recent mood entries with optional note/date.
- * Loading and error states for API calls.
  */
 
 import { useState, useEffect } from 'react';
@@ -72,14 +71,14 @@ export default function MoodTracker() {
   return (
     <div>
       <h1>Mood Tracker</h1>
-      <p style={{ color: 'var(--color-text-muted)', marginBottom: '1.5rem' }}>
+      <p style={{ color: 'var(--color-text-muted)', marginBottom: '1.75rem', fontSize: '1.05rem' }}>
         How are you feeling today? Select a mood and add an optional note.
       </p>
 
       {error && <div className="message-error" role="alert">{error}</div>}
 
       <div className="card" style={{ marginBottom: '2rem' }}>
-        <h2 style={{ marginBottom: '1rem' }}>Log your mood</h2>
+        <h2 style={{ marginBottom: '1.25rem' }}>Log your mood</h2>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label>Mood</label>
@@ -105,7 +104,7 @@ export default function MoodTracker() {
 
       <ActivitySuggestions mood={showSuggestionsFor} />
 
-      <h2>Recent moods</h2>
+      <h2 style={{ marginBottom: '1rem' }}>Recent moods</h2>
       {loading ? (
         <div className="loading-wrap">
           <div className="loading-spinner" aria-hidden />
@@ -119,13 +118,25 @@ export default function MoodTracker() {
             <li
               key={m._id}
               className="card"
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '0.75rem',
+              }}
             >
               <span style={{ fontSize: '1.5rem' }}>{MOOD_EMOJI[m.mood] || '•'}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <strong style={{ textTransform: 'capitalize' }}>{m.mood}</strong>
-                {m.note && <p style={{ margin: '0.25rem 0 0', fontSize: '0.9375rem', color: 'var(--color-text-muted)' }}>{m.note}</p>}
-                <small style={{ color: 'var(--color-text-muted)' }}>{new Date(m.date).toLocaleDateString()}</small>
+                {m.note && (
+                  <p style={{ margin: '0.25rem 0 0', fontSize: '0.9375rem', color: 'var(--color-text-muted)' }}>
+                    {m.note}
+                  </p>
+                )}
+                <small style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>
+                  {new Date(m.date).toLocaleDateString()}
+                </small>
               </div>
               <button type="button" className="btn btn-outline" onClick={() => handleDelete(m._id)}>
                 Delete

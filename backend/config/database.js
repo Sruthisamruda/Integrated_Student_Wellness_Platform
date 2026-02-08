@@ -1,3 +1,4 @@
+
 /**
  * MongoDB database connection configuration.
  * Connects to MongoDB using the URI from environment variables.
@@ -25,4 +26,4 @@ const connectDB = async () => {
   }
 };
 
-module.exports = connectDB;
+module.exports = { connectDB };

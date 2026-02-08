@@ -26,45 +26,35 @@ export default function Dashboard() {
           setLatestMood(data[0].mood);
         }
       })
-      .catch(() => {
-        // Silently fail - suggestions are optional
-      });
+      .catch(() => {});
   }, []);
 
   return (
-    <div>
-      <h1>Welcome, {name}</h1>
-      <p style={{ color: 'var(--color-text-muted)', marginBottom: '1.5rem' }}>
-        Take a moment for your wellness. Track your mood, plan your study, and relax when you need it.
-      </p>
+    <div className="dashboard">
+      <div style={{ marginBottom: '2rem' }}>
+        <h1 style={{ marginBottom: '0.5rem' }}>Welcome, {name}</h1>
+        <p style={{ color: 'var(--color-text-muted)', marginBottom: 0, fontSize: '1.05rem' }}>
+          Take a moment for your wellness. Track your mood, plan your study, and relax when you need it.
+        </p>
+      </div>
 
       <ActivitySuggestions mood={latestMood} />
+
+      <h2 style={{ marginBottom: '1rem' }}>Quick access</h2>
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-          gap: '1rem',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+          gap: '1.25rem',
         }}
       >
         {cards.map((card) => (
-          <Link
-            key={card.to}
-            to={card.to}
-            style={{
-              display: 'block',
-              padding: '1.25rem',
-              background: 'var(--color-surface)',
-              borderRadius: 'var(--radius)',
-              boxShadow: 'var(--shadow)',
-              textDecoration: 'none',
-              color: 'var(--color-text)',
-              border: '1px solid var(--color-border)',
-              transition: 'border-color 0.2s, box-shadow 0.2s',
-            }}
-          >
-            <span style={{ fontSize: '2rem' }}>{card.emoji}</span>
-            <h3 style={{ margin: '0.5rem 0 0.25rem' }}>{card.title}</h3>
-            <p style={{ margin: 0, fontSize: '0.9375rem', color: 'var(--color-text-muted)' }}>{card.desc}</p>
+          <Link key={card.to} to={card.to} className="feature-card">
+            <span style={{ fontSize: '2.5rem', display: 'block', marginBottom: '0.75rem' }}>{card.emoji}</span>
+            <h3 style={{ margin: '0 0 0.35rem', color: 'var(--color-primary)' }}>{card.title}</h3>
+            <p style={{ margin: 0, fontSize: '0.9375rem', color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
+              {card.desc}
+            </p>
           </Link>
         ))}
       </div>

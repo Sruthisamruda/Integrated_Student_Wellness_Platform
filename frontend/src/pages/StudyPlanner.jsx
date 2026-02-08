@@ -1,6 +1,5 @@
 /**
  * Study Planner: list assignments, add new, edit, delete, toggle completed.
- * Loading and error states; form validation (title, due date).
  */
 
 import { useState, useEffect } from 'react';
@@ -121,19 +120,19 @@ export default function StudyPlanner() {
   return (
     <div>
       <h1>Study Planner</h1>
-      <p style={{ color: 'var(--color-text-muted)', marginBottom: '1rem' }}>
+      <p style={{ color: 'var(--color-text-muted)', marginBottom: '1.5rem', fontSize: '1.05rem' }}>
         Add assignments and due dates. Mark them complete when done.
       </p>
 
       {error && <div className="message-error" role="alert">{error}</div>}
 
       {!showForm ? (
-        <button type="button" className="btn btn-primary" onClick={() => setShowForm(true)}>
+        <button type="button" className="btn btn-primary" onClick={() => setShowForm(true)} style={{ marginBottom: '1.5rem' }}>
           Add assignment
         </button>
       ) : (
         <div className="card" style={{ marginBottom: '1.5rem' }}>
-          <h2>{editing ? 'Edit assignment' : 'New assignment'}</h2>
+          <h2 style={{ marginBottom: '1.25rem' }}>{editing ? 'Edit assignment' : 'New assignment'}</h2>
           <form onSubmit={handleSubmit}>
             <div className="form-group">
               <label htmlFor="assign-title">Title *</label>
@@ -175,7 +174,7 @@ export default function StudyPlanner() {
                 <option value="high">High</option>
               </select>
             </div>
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
               <button type="submit" className="btn btn-accent" disabled={submitting}>
                 {submitting ? <span className="loading-spinner" aria-hidden /> : null}
                 {submitting ? ' Saving...' : editing ? 'Update' : 'Add'}
@@ -188,7 +187,7 @@ export default function StudyPlanner() {
         </div>
       )}
 
-      <h2>Assignments</h2>
+      <h2 style={{ marginBottom: '1rem' }}>Assignments</h2>
       {loading ? (
         <div className="loading-wrap">
           <div className="loading-spinner" aria-hidden />

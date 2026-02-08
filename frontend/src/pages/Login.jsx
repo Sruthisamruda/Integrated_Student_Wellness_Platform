@@ -48,7 +48,11 @@ export default function Login() {
   return (
     <div className="auth-page">
       <div className="auth-card">
+        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+          <span style={{ fontSize: '2.5rem' }}>🌱</span>
+        </div>
         <h1>Log in</h1>
+        <p className="auth-subtitle">Welcome back. Sign in to continue.</p>
         {error && <div className="message-error" role="alert">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -75,12 +79,12 @@ export default function Login() {
               placeholder="••••••••"
             />
           </div>
-          <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '0.5rem' }} disabled={loading}>
+          <button type="submit" className="btn btn-primary" disabled={loading}>
             {loading ? <span className="loading-spinner" aria-hidden /> : null}
             {loading ? ' Logging in...' : 'Log in'}
           </button>
         </form>
-        <p style={{ marginTop: '1rem', textAlign: 'center', fontSize: '0.9375rem' }}>
+        <p className="auth-footer">
           Don&apos;t have an account? <Link to="/signup">Sign up</Link>
         </p>
       </div>

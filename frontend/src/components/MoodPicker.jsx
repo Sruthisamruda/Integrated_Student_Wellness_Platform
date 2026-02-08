@@ -1,6 +1,5 @@
 /**
  * Emoji mood selector: user picks one mood value to submit.
- * Options map to backend mood values (happy, calm, anxious, sad, neutral, tired, energetic).
  */
 
 const MOODS = [
@@ -15,7 +14,14 @@ const MOODS = [
 
 export default function MoodPicker({ value, onChange }) {
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'center' }}>
+    <div
+      style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '0.75rem',
+        justifyContent: 'center',
+      }}
+    >
       {MOODS.map((m) => (
         <button
           key={m.value}
@@ -24,12 +30,26 @@ export default function MoodPicker({ value, onChange }) {
           aria-pressed={value === m.value}
           title={m.label}
           style={{
-            padding: '0.6rem',
-            fontSize: '1.5rem',
-            border: value === m.value ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+            padding: '0.75rem',
+            fontSize: '1.75rem',
+            border: value === m.value ? '2px solid var(--color-primary)' : '1.5px solid var(--color-border)',
             borderRadius: 'var(--radius)',
-            background: value === m.value ? 'rgba(45, 90, 123, 0.1)' : 'var(--color-surface)',
+            background: value === m.value ? 'var(--color-primary-soft)' : 'var(--color-surface)',
             cursor: 'pointer',
+            transition: 'all var(--transition)',
+            boxShadow: value === m.value ? 'var(--shadow-sm)' : 'none',
+          }}
+          onMouseEnter={(e) => {
+            if (value !== m.value) {
+              e.currentTarget.style.background = 'var(--color-primary-soft)';
+              e.currentTarget.style.borderColor = 'var(--color-primary)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (value !== m.value) {
+              e.currentTarget.style.background = 'var(--color-surface)';
+              e.currentTarget.style.borderColor = 'var(--color-border)';
+            }
           }}
         >
           {m.emoji}

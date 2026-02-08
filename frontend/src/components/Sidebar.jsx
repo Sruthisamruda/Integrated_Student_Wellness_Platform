@@ -1,32 +1,35 @@
 /**
- * Side navigation: links to Dashboard, Mood, Study, Relaxation.
- * On mobile, can be toggled open/closed via a hamburger (optional; here we show always for simplicity).
- * Uses NavLink for active styling.
+ * Side navigation: links to Dashboard, Mood, Study, Relaxation, Profile.
+ * Clean nav with icons and refined active/hover states.
  */
 
 import { NavLink } from 'react-router-dom';
 import { useState } from 'react';
 
 const navItems = [
-  { to: '/dashboard', label: 'Dashboard' },
-  { to: '/mood', label: 'Mood Tracker' },
-  { to: '/study', label: 'Study Planner' },
-  { to: '/relax', label: 'Relaxation' },
-  { to: '/profile', label: 'Profile' },
+  { to: '/dashboard', label: 'Dashboard', icon: '📊' },
+  { to: '/mood', label: 'Mood Tracker', icon: '😊' },
+  { to: '/study', label: 'Study Planner', icon: '📚' },
+  { to: '/relax', label: 'Relaxation', icon: '🧘' },
+  { to: '/profile', label: 'Profile', icon: '👤' },
 ];
 
 export default function Sidebar() {
   const [open, setOpen] = useState(false);
 
   const linkStyle = ({ isActive }) => ({
-    display: 'block',
-    padding: '0.6rem 1rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    padding: '0.75rem 1rem',
     color: isActive ? 'var(--color-primary)' : 'var(--color-text)',
     textDecoration: 'none',
-    fontWeight: isActive ? 600 : 400,
-    background: isActive ? 'rgba(45, 90, 123, 0.08)' : 'transparent',
+    fontWeight: isActive ? 600 : 500,
+    background: isActive ? 'var(--color-primary-soft)' : 'transparent',
     borderRadius: 'var(--radius)',
     marginBottom: '0.25rem',
+    fontSize: '0.9375rem',
+    transition: 'all var(--transition)',
   });
 
   return (
@@ -34,15 +37,19 @@ export default function Sidebar() {
       {/* Mobile toggle */}
       <button
         type="button"
-        className="btn btn-outline"
+        className="btn btn-primary"
         aria-label="Toggle menu"
         onClick={() => setOpen((o) => !o)}
         style={{
           position: 'fixed',
-          bottom: '1rem',
-          left: '1rem',
+          bottom: '1.25rem',
+          left: '1.25rem',
           zIndex: 101,
-          display: 'block',
+          width: '48px',
+          height: '48px',
+          borderRadius: '50%',
+          padding: 0,
+          boxShadow: 'var(--shadow)',
         }}
       >
         {open ? '✕' : '☰'}
@@ -53,9 +60,9 @@ export default function Sidebar() {
         style={{
           width: 'var(--sidebar-width)',
           minWidth: 'var(--sidebar-width)',
-          background: 'var(--color-surface)',
+          background: 'linear-gradient(180deg, var(--color-surface) 0%, #fafcfd 100%)',
           borderRight: '1px solid var(--color-border)',
-          padding: '1rem 0.75rem',
+          padding: '1.25rem 1rem',
           display: open ? 'block' : 'none',
           position: 'fixed',
           left: 0,
@@ -63,21 +70,27 @@ export default function Sidebar() {
           bottom: 0,
           zIndex: 100,
           overflowY: 'auto',
+          boxShadow: 'var(--shadow-sm)',
         }}
       >
         <nav>
           {navItems.map((item) => (
-            <NavLink key={item.to} to={item.to} style={linkStyle} onClick={() => setOpen(false)}>
+            <NavLink
+              key={item.to}
+              to={item.to}
+              style={linkStyle}
+              onClick={() => setOpen(false)}
+            >
+              <span style={{ fontSize: '1.25rem' }}>{item.icon}</span>
               {item.label}
             </NavLink>
           ))}
         </nav>
       </aside>
 
-      {/* Desktop: sidebar in flow; mobile: toggle visibility */}
       <style>{`
         @media (min-width: 768px) {
-          .sidebar { display: block !important; position: static !important; }
+          .sidebar { display: block !important; position: static !important; box-shadow: none; }
           button[aria-label="Toggle menu"] { display: none !important; }
         }
         @media (max-width: 767px) {
