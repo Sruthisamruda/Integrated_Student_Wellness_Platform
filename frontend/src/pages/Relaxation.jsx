@@ -3,6 +3,7 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
+import { apiRequest } from '../api';
 
 const BREATHING_STEPS = [
   { label: 'Breathe in', duration: 4 },
@@ -37,6 +38,19 @@ export default function Relaxation() {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [isActive]);
+
+  const startBreathing = async () => {
+    setIsActive(true);
+    // Log relaxation session
+    try {
+      await apiRequest('/relaxation/session', {
+        method: 'POST',
+        body: JSON.stringify({ activityType: 'breathing', duration: 0 }),
+      });
+    } catch (err) {
+      // Silently fail - logging is optional
+    }
+  };
 
   const stopBreathing = () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -84,7 +98,7 @@ export default function Relaxation() {
           <button
             type="button"
             className="btn btn-accent"
-            onClick={() => setIsActive(true)}
+            onClick={startBreathing}
             disabled={isActive}
           >
             Start breathing

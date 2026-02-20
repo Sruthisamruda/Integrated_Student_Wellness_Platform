@@ -13,6 +13,8 @@ const Assignment = require('../models/Assignment');
 
 const TEST_EMAIL = 'student@test.com';
 const TEST_PASSWORD = 'password123';
+const ADMIN_EMAIL = 'admin@test.com';
+const ADMIN_PASSWORD = 'admin123';
 
 async function seed() {
   if (!process.env.MONGODB_URI) {
@@ -33,13 +35,31 @@ async function seed() {
   }
 
   const salt = await bcrypt.genSalt(10);
+
+  // Create test student
   const hashedPassword = await bcrypt.hash(TEST_PASSWORD, salt);
   const user = await User.create({
     email: TEST_EMAIL,
     password: hashedPassword,
     name: 'Test Student',
+    role: 'user',
   });
   console.log('Created test user:', user.email);
+
+  // Create admin user (remove existing if present)
+  const existingAdmin = await User.findOne({ email: ADMIN_EMAIL });
+  if (existingAdmin) {
+    await User.deleteOne({ _id: existingAdmin._id });
+    console.log('Removed existing admin user');
+  }
+  const adminHashed = await bcrypt.hash(ADMIN_PASSWORD, salt);
+  const admin = await User.create({
+    email: ADMIN_EMAIL,
+    password: adminHashed,
+    name: 'Admin',
+    role: 'admin',
+  });
+  console.log('Created admin user:', admin.email);
 
   const now = new Date();
   const moods = [
@@ -69,9 +89,12 @@ async function seed() {
   console.log('Created', assignments.length, 'sample assignments');
 
   console.log('\n--- Seed complete ---');
-  console.log('Log in with:');
+  console.log('Student login:');
   console.log('  Email:', TEST_EMAIL);
   console.log('  Password:', TEST_PASSWORD);
+  console.log('\nAdmin login:');
+  console.log('  Email:', ADMIN_EMAIL);
+  console.log('  Password:', ADMIN_PASSWORD);
   await mongoose.disconnect();
   process.exit(0);
 }

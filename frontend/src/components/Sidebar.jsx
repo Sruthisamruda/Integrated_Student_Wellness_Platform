@@ -11,6 +11,7 @@ const navItems = [
   { to: '/mood', label: 'Mood Tracker', icon: '😊' },
   { to: '/study', label: 'Study Planner', icon: '📚' },
   { to: '/relax', label: 'Relaxation', icon: '🧘' },
+  { to: '/forum', label: 'Forum', icon: '💬' },
   { to: '/profile', label: 'Profile', icon: '👤' },
 ];
 

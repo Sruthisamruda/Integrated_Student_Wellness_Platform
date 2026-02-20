@@ -9,6 +9,7 @@ A full-stack web application to support student wellness through mood tracking, 
 - **Study Planner**: Add, edit, and manage assignments with due dates
 - **Relaxation**: Meditation and breathing exercise resources
 - **Profile**: View and update user profile
+- **Admin**: Admin dashboard (stats, user list) for users with admin role
 
 ## Tech Stack
 
@@ -106,7 +107,7 @@ Frontend runs at `http://localhost:5173` (or the port Vite shows).
 
 ### 4. Seed sample data (optional)
 
-To create a test user and sample moods/assignments:
+To create a test user, admin user, and sample moods/assignments:
 
 ```bash
 cd backend
@@ -115,8 +116,13 @@ node scripts/seed.js
 
 Then log in with:
 
+**Student:**
 - **Email:** `student@test.com`
 - **Password:** `password123`
+
+**Admin:**
+- **Email:** `admin@test.com`
+- **Password:** `admin123`
 
 ---
 

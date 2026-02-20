@@ -13,6 +13,12 @@ import MoodTracker from './pages/MoodTracker';
 import StudyPlanner from './pages/StudyPlanner';
 import Relaxation from './pages/Relaxation';
 import Profile from './pages/Profile';
+import DashboardAnalytics from './pages/DashboardAnalytics';
+import MoodAnalytics from './pages/MoodAnalytics';
+import StudyAnalytics from './pages/StudyAnalytics';
+import RelaxationAnalytics from './pages/RelaxationAnalytics';
+import Forum from './pages/Forum';
+import ForumAnalytics from './pages/ForumAnalytics';
 
 function PrivateRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -76,6 +82,11 @@ function AppLayout({ children }) {
   );
 }
 
+function ConditionalRoute({ adminComponent, studentComponent }) {
+  const { isAdmin } = useAuth();
+  return isAdmin ? adminComponent : studentComponent;
+}
+
 export default function App() {
   return (
     <Routes>
@@ -85,7 +96,12 @@ export default function App() {
         path="/dashboard"
         element={
           <PrivateRoute>
-            <AppLayout><Dashboard /></AppLayout>
+            <AppLayout>
+              <ConditionalRoute
+                adminComponent={<DashboardAnalytics />}
+                studentComponent={<Dashboard />}
+              />
+            </AppLayout>
           </PrivateRoute>
         }
       />
@@ -93,7 +109,12 @@ export default function App() {
         path="/mood"
         element={
           <PrivateRoute>
-            <AppLayout><MoodTracker /></AppLayout>
+            <AppLayout>
+              <ConditionalRoute
+                adminComponent={<MoodAnalytics />}
+                studentComponent={<MoodTracker />}
+              />
+            </AppLayout>
           </PrivateRoute>
         }
       />
@@ -101,7 +122,12 @@ export default function App() {
         path="/study"
         element={
           <PrivateRoute>
-            <AppLayout><StudyPlanner /></AppLayout>
+            <AppLayout>
+              <ConditionalRoute
+                adminComponent={<StudyAnalytics />}
+                studentComponent={<StudyPlanner />}
+              />
+            </AppLayout>
           </PrivateRoute>
         }
       />
@@ -109,7 +135,25 @@ export default function App() {
         path="/relax"
         element={
           <PrivateRoute>
-            <AppLayout><Relaxation /></AppLayout>
+            <AppLayout>
+              <ConditionalRoute
+                adminComponent={<RelaxationAnalytics />}
+                studentComponent={<Relaxation />}
+              />
+            </AppLayout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/forum"
+        element={
+          <PrivateRoute>
+            <AppLayout>
+              <ConditionalRoute
+                adminComponent={<ForumAnalytics />}
+                studentComponent={<Forum />}
+              />
+            </AppLayout>
           </PrivateRoute>
         }
       />
