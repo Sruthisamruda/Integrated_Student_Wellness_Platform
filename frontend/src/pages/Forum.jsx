@@ -3,17 +3,22 @@
  * Students can create posts, like, comment. Admins see analytics instead.
  */
 
-import { useState, useEffect } from 'react';
-import { apiRequest } from '../api';
+import { useState, useEffect, useRef } from 'react';
+import { apiRequest, apiUpload } from '../api';
 import { useAuth } from '../context/AuthContext';
+
+const ACCEPTED_IMAGE_TYPES = 'image/jpeg,image/png,image/gif,image/webp';
+const MAX_IMAGE_SIZE_MB = 5;
 
 export default function Forum() {
   const { user } = useAuth();
+  const fileInputRef = useRef(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [postContent, setPostContent] = useState('');
-  const [postImageUrl, setPostImageUrl] = useState('');
+  const [postImageFile, setPostImageFile] = useState(null);
+  const [postImagePreview, setPostImagePreview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [commentTexts, setCommentTexts] = useState({});
   const [commenting, setCommenting] = useState({});
@@ -35,6 +40,34 @@ export default function Forum() {
     }
   };
 
+  const handleImageSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      setPostImageFile(null);
+      setPostImagePreview(null);
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file (JPEG, PNG, GIF, or WebP).');
+      return;
+    }
+    if (file.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
+      setError(`Image must be under ${MAX_IMAGE_SIZE_MB}MB.`);
+      return;
+    }
+    setError('');
+    setPostImageFile(file);
+    const reader = new FileReader();
+    reader.onload = () => setPostImagePreview(reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  const clearImage = () => {
+    setPostImageFile(null);
+    setPostImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const handleCreatePost = async (e) => {
     e.preventDefault();
     if (!postContent.trim()) {
@@ -44,12 +77,17 @@ export default function Forum() {
     setSubmitting(true);
     setError('');
     try {
+      let imageUrl = '';
+      if (postImageFile) {
+        const { imageUrl: uploadedUrl } = await apiUpload('/forum/upload', postImageFile);
+        imageUrl = uploadedUrl || '';
+      }
       await apiRequest('/forum/posts', {
         method: 'POST',
-        body: JSON.stringify({ content: postContent.trim(), imageUrl: postImageUrl.trim() }),
+        body: JSON.stringify({ content: postContent.trim(), imageUrl }),
       });
       setPostContent('');
-      setPostImageUrl('');
+      clearImage();
       fetchPosts();
     } catch (err) {
       setError(err.message || 'Failed to create post');
@@ -155,15 +193,45 @@ export default function Forum() {
               </div>
             </div>
             <div className="form-group">
-              <label htmlFor="post-image">Image URL (optional)</label>
+              <label htmlFor="post-image">Add image (optional, max {MAX_IMAGE_SIZE_MB}MB)</label>
               <input
+                ref={fileInputRef}
                 id="post-image"
-                type="url"
-                value={postImageUrl}
-                onChange={(e) => setPostImageUrl(e.target.value)}
-                placeholder="https://example.com/image.jpg"
+                type="file"
+                accept={ACCEPTED_IMAGE_TYPES}
+                onChange={handleImageSelect}
                 disabled={submitting}
+                style={{ display: 'block', marginTop: '0.25rem' }}
               />
+              {postImagePreview && (
+                <div style={{ marginTop: '0.75rem', position: 'relative', display: 'inline-block' }}>
+                  <img
+                    src={postImagePreview}
+                    alt="Preview"
+                    style={{
+                      maxWidth: '200px',
+                      maxHeight: '200px',
+                      borderRadius: 'var(--radius)',
+                      border: '1px solid var(--color-border)',
+                      objectFit: 'cover',
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={clearImage}
+                    className="btn btn-outline"
+                    style={{
+                      position: 'absolute',
+                      top: '0.5rem',
+                      right: '0.5rem',
+                      padding: '0.25rem 0.5rem',
+                      fontSize: '0.875rem',
+                    }}
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
             </div>
             <button type="submit" className="btn btn-primary" disabled={submitting || !postContent.trim()}>
               {submitting ? <span className="loading-spinner" aria-hidden /> : null}

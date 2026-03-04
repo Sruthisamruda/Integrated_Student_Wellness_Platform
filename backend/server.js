@@ -46,6 +46,10 @@ app.use(
 // Parse JSON request bodies
 app.use(express.json());
 
+// Serve uploaded forum images
+const path = require('path');
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
 // Optional: health check for deployment
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });

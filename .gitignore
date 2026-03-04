@@ -36,6 +36,9 @@ coverage/
 .DS_Store
 *.pem
 
+# Uploaded files (forum images)
+backend/uploads/
+
 # Misc
 *.tgz
 .cache/

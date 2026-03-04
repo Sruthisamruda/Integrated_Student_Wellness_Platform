@@ -6,6 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
+const { upload } = require('../middleware/uploadMiddleware');
 const {
   getPosts,
   createPost,
@@ -13,11 +14,13 @@ const {
   addComment,
   deletePost,
   deleteComment,
+  uploadImage,
 } = require('../controllers/forumController');
 
 router.use(protect);
 
 router.get('/posts', getPosts);
+router.post('/upload', upload.single('image'), uploadImage);
 router.post('/posts', createPost);
 router.post('/posts/:id/like', toggleLike);
 router.post('/posts/:id/comment', addComment);

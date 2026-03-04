@@ -1,5 +1,5 @@
 /**
- * Forum controller: CRUD for posts, likes, comments.
+ * Forum controller: CRUD for posts, likes, comments; image upload.
  * Students can create/interact; admins can only view.
  */
 
@@ -208,6 +208,28 @@ const deleteComment = async (req, res) => {
   }
 };
 
+/**
+ * POST /api/forum/upload
+ * Multipart form with field "image". Returns { imageUrl }.
+ * Students only.
+ */
+const uploadImage = async (req, res) => {
+  try {
+    if (req.user.role === 'admin') {
+      return res.status(403).json({ message: 'Admins cannot upload images' });
+    }
+    if (!req.file || !req.file.filename) {
+      return res.status(400).json({ message: 'No image file provided' });
+    }
+    // Return path so frontend can use same-origin (e.g. with Vite proxy) or prepend backend URL
+    const imageUrl = `/uploads/forum/${req.file.filename}`;
+    res.status(200).json({ imageUrl });
+  } catch (error) {
+    console.error('Upload image error:', error);
+    res.status(500).json({ message: 'Failed to upload image' });
+  }
+};
+
 module.exports = {
   getPosts,
   createPost,
@@ -215,4 +237,5 @@ module.exports = {
   addComment,
   deletePost,
   deleteComment,
+  uploadImage,
 };

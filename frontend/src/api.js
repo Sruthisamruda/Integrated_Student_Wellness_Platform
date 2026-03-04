@@ -33,3 +33,28 @@ export async function apiRequest(endpoint, options = {}) {
   }
   return data;
 }
+
+/**
+ * Upload a file (e.g. image) to an endpoint. Does not set Content-Type so the browser sets multipart boundary.
+ */
+export async function apiUpload(endpoint, file, fieldName = 'image') {
+  const url = endpoint.startsWith('http') ? endpoint : `${API_URL}${endpoint}`;
+  const token = getStoredToken();
+  const formData = new FormData();
+  formData.append(fieldName, file);
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = new Error(data.message || 'Upload failed');
+    err.status = res.status;
+    err.data = data;
+    throw err;
+  }
+  return data;
+}
