@@ -10,6 +10,8 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Mood = require('../models/Mood');
 const Assignment = require('../models/Assignment');
+const Question = require('../models/Question');
+const MoodHistory = require('../models/MoodHistory');
 
 const TEST_EMAIL = 'student@test.com';
 const TEST_PASSWORD = 'password123';
@@ -25,11 +27,66 @@ async function seed() {
   await mongoose.connect(process.env.MONGODB_URI);
   console.log('Connected to MongoDB');
 
+  const existingQuestions = await Question.countDocuments();
+  if (existingQuestions === 0) {
+    const baseOptions = [
+      { text: 'Never', score: 1 },
+      { text: 'Rarely', score: 2 },
+      { text: 'Sometimes', score: 3 },
+      { text: 'Often', score: 4 },
+      { text: 'Always', score: 5 },
+    ];
+
+    const questions = [
+      // Academic Stress (10)
+      { category: 'Academic Stress', question: 'How often do you feel overwhelmed by your academic workload?', options: baseOptions },
+      { category: 'Academic Stress', question: 'How often do deadlines make you feel pressured?', options: baseOptions },
+      { category: 'Academic Stress', question: 'How often do you worry about your grades or performance?', options: baseOptions },
+      { category: 'Academic Stress', question: 'How often do you struggle to concentrate while studying?', options: baseOptions },
+      { category: 'Academic Stress', question: 'How often do you feel you do not have enough time to complete your tasks?', options: baseOptions },
+      { category: 'Academic Stress', question: 'How often do you feel stressed before exams or assessments?', options: baseOptions },
+      { category: 'Academic Stress', question: 'How often do you procrastinate because tasks feel too difficult?', options: baseOptions },
+      { category: 'Academic Stress', question: 'How often do you feel anxious about upcoming assignments?', options: baseOptions },
+      { category: 'Academic Stress', question: 'How often do you find it hard to balance multiple subjects at once?', options: baseOptions },
+      { category: 'Academic Stress', question: 'How often do you feel exhausted after studying?', options: baseOptions },
+
+      // Emotional Wellbeing (10)
+      { category: 'Emotional Wellbeing', question: 'How often do you feel calm and in control of your emotions?', options: baseOptions },
+      { category: 'Emotional Wellbeing', question: 'How often do you feel anxious without a clear reason?', options: baseOptions },
+      { category: 'Emotional Wellbeing', question: 'How often do you feel irritable or frustrated?', options: baseOptions },
+      { category: 'Emotional Wellbeing', question: 'How often do you feel motivated to do your daily activities?', options: baseOptions },
+      { category: 'Emotional Wellbeing', question: 'How often do you feel down or discouraged?', options: baseOptions },
+      { category: 'Emotional Wellbeing', question: 'How often do you feel confident about handling challenges?', options: baseOptions },
+      { category: 'Emotional Wellbeing', question: 'How often do you feel lonely or disconnected from others?', options: baseOptions },
+      { category: 'Emotional Wellbeing', question: 'How often do you feel satisfied with your progress this week?', options: baseOptions },
+      { category: 'Emotional Wellbeing', question: 'How often do you feel tense or restless?', options: baseOptions },
+      { category: 'Emotional Wellbeing', question: 'How often do you feel hopeful about the next few days?', options: baseOptions },
+
+      // Lifestyle / Personal Balance (10)
+      { category: 'Lifestyle / Personal Balance', question: 'How often do you get at least 7 hours of sleep?', options: baseOptions },
+      { category: 'Lifestyle / Personal Balance', question: 'How often do you take short breaks during study sessions?', options: baseOptions },
+      { category: 'Lifestyle / Personal Balance', question: 'How often do you do some physical activity (walk, exercise, sports)?', options: baseOptions },
+      { category: 'Lifestyle / Personal Balance', question: 'How often do you eat regular and balanced meals?', options: baseOptions },
+      { category: 'Lifestyle / Personal Balance', question: 'How often do you spend time on hobbies or creative activities?', options: baseOptions },
+      { category: 'Lifestyle / Personal Balance', question: 'How often do you limit screen time before sleeping?', options: baseOptions },
+      { category: 'Lifestyle / Personal Balance', question: 'How often do you feel you have time for friends or family?', options: baseOptions },
+      { category: 'Lifestyle / Personal Balance', question: 'How often do you feel your day has a healthy balance between work and rest?', options: baseOptions },
+      { category: 'Lifestyle / Personal Balance', question: 'How often do you feel physically tired during the day?', options: baseOptions },
+      { category: 'Lifestyle / Personal Balance', question: 'How often do you feel organized in managing your daily routine?', options: baseOptions },
+    ];
+
+    await Question.insertMany(questions);
+    console.log('Seeded', questions.length, 'mood assessment questions');
+  } else {
+    console.log('Questions already exist:', existingQuestions);
+  }
+
   // Remove existing test user data so we can re-seed idempotently
   const existing = await User.findOne({ email: TEST_EMAIL });
   if (existing) {
     await Mood.deleteMany({ user: existing._id });
     await Assignment.deleteMany({ user: existing._id });
+    await MoodHistory.deleteMany({ user: existing._id });
     await User.deleteOne({ _id: existing._id });
     console.log('Removed existing test user and related data');
   }

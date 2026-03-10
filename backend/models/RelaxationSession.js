@@ -14,13 +14,15 @@ const relaxationSessionSchema = new mongoose.Schema(
     },
     activityType: {
       type: String,
-      enum: ['breathing', 'meditation', 'other'],
+      enum: ['breathing', 'meditation', 'music', 'walk', 'stretch', 'journaling', 'other'],
       default: 'breathing',
     },
     duration: {
       type: Number, // Duration in seconds
       default: 0,
     },
+    moodBefore: { type: Number, min: 1, max: 5 }, // 1=very stressed, 5=very calm
+    moodAfter: { type: Number, min: 1, max: 5 },
   },
   {
     timestamps: true,

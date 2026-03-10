@@ -10,6 +10,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import MoodTracker from './pages/MoodTracker';
+import MoodAssessment from './pages/MoodAssessment';
 import StudyPlanner from './pages/StudyPlanner';
 import Relaxation from './pages/Relaxation';
 import Profile from './pages/Profile';
@@ -19,6 +20,7 @@ import StudyAnalytics from './pages/StudyAnalytics';
 import RelaxationAnalytics from './pages/RelaxationAnalytics';
 import Forum from './pages/Forum';
 import ForumAnalytics from './pages/ForumAnalytics';
+import MoodCalendar from './pages/MoodCalendar';
 
 function PrivateRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -113,6 +115,27 @@ export default function App() {
               <ConditionalRoute
                 adminComponent={<MoodAnalytics />}
                 studentComponent={<MoodTracker />}
+              />
+            </AppLayout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/mood-calendar"
+        element={
+          <PrivateRoute>
+            <AppLayout><MoodCalendar /></AppLayout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/mood-assessment"
+        element={
+          <PrivateRoute>
+            <AppLayout>
+              <ConditionalRoute
+                adminComponent={<MoodAnalytics />}
+                studentComponent={<MoodAssessment />}
               />
             </AppLayout>
           </PrivateRoute>

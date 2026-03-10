@@ -9,6 +9,8 @@ import { useState } from 'react';
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: '📊' },
   { to: '/mood', label: 'Mood Tracker', icon: '😊' },
+  { to: '/mood-assessment', label: 'Mood Assessment', icon: '📝' },
+  { to: '/mood-calendar', label: 'Mood Calendar', icon: '📅' },
   { to: '/study', label: 'Study Planner', icon: '📚' },
   { to: '/relax', label: 'Relaxation', icon: '🧘' },
   { to: '/forum', label: 'Forum', icon: '💬' },

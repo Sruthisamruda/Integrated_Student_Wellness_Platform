@@ -15,6 +15,7 @@ const assignmentRoutes = require('./routes/assignmentRoutes');
 const activityRoutes = require('./routes/activityRoutes');
 const relaxationRoutes = require('./routes/relaxationRoutes');
 const forumRoutes = require('./routes/forumRoutes');
+const wellnessRoutes = require('./routes/wellnessRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
@@ -62,6 +63,7 @@ app.use('/api/assignments', assignmentRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/relaxation', relaxationRoutes);
 app.use('/api/forum', forumRoutes);
+app.use('/api/wellness', wellnessRoutes);
 app.use('/api/admin', adminRoutes);
 
 // 404 for unknown routes
