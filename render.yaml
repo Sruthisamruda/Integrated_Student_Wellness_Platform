@@ -1,0 +1,40 @@
+services:
+  # ── Backend: Node.js / Express API ──────────────────────────────────────
+  - type: web
+    name: wellness-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      # Set these in the Render dashboard → wellness-backend → Environment:
+      - key: MONGODB_URI
+        sync: false          # marks as secret – fill in dashboard
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRE
+        value: 7d
+      - key: FRONTEND_URL
+        sync: false          # paste your Render static-site URL after deploy
+
+  # ── Frontend: React / Vite static site ──────────────────────────────────
+  - type: web
+    name: wellness-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      # All routes → index.html so React Router works correctly
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      # Set this in the Render dashboard → wellness-frontend → Environment:
+      - key: VITE_API_URL
+        sync: false          # paste your Render backend URL + /api, e.g.
+                             # https://wellness-backend.onrender.com/api
