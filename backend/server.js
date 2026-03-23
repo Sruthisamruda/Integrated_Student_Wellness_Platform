@@ -68,9 +68,13 @@ app.use('/api/wellness', wellnessRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/student', studentRoutes);
 
-// 404 for unknown routes
-app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found' });
+// Serve React frontend (production build)
+const frontendDist = path.join(__dirname, '..', 'frontend', 'dist');
+app.use(express.static(frontendDist));
+
+// Catch-all: send index.html for any non-API route (React Router support)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(frontendDist, 'index.html'));
 });
 
 // Global error handler (e.g. CORS errors)
