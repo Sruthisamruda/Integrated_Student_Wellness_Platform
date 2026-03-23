@@ -16,6 +16,11 @@ const {
   getForumStats,
 } = require('../controllers/adminController');
 
+const {
+  createCounsellingSession,
+  getStudentsStressOverview,
+} = require('../controllers/adminCounsellingController');
+
 router.use(protect);
 router.use(adminOnly);
 
@@ -26,5 +31,9 @@ router.get('/relaxation-stats', getRelaxationStats);
 router.get('/user-stats', getUserStats);
 router.get('/forum-stats', getForumStats);
 router.get('/users', getUsers);
+
+// Counselling + stress overview (admin)
+router.get('/students-stress', getStudentsStressOverview);
+router.post('/counselling', createCounsellingSession);
 
 module.exports = router;

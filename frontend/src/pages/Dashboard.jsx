@@ -15,9 +15,10 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import FutureWellnessPrediction from '../components/FutureWellnessPrediction';
 
 const cards = [
-  { to: '/mood', title: 'Mood Tracker', desc: 'Log how you feel and track trends over time.', emoji: '😊' },
+  { to: '/mood', title: 'Mood Tracker', desc: 'Draw how you feel; we infer your mood and suggest wellness tips.', emoji: '🎨' },
   { to: '/study', title: 'Study Planner', desc: 'Manage assignments and due dates.', emoji: '📚' },
   { to: '/relax', title: 'Relaxation', desc: 'Breathing exercises and meditation resources.', emoji: '🧘' },
 ];
@@ -31,6 +32,7 @@ export default function Dashboard() {
   const [weeklyReport, setWeeklyReport] = useState(null);
   const [dailyPlan, setDailyPlan] = useState(null);
   const [relaxationInsights, setRelaxationInsights] = useState(null);
+  const [upcomingCounselling, setUpcomingCounselling] = useState(null);
 
   useEffect(() => {
     apiRequest('/mood/latest')
@@ -48,10 +50,19 @@ export default function Dashboard() {
     apiRequest('/relaxation/effectiveness')
       .then((data) => setRelaxationInsights(data || null))
       .catch(() => setRelaxationInsights(null));
+
+    apiRequest('/student/counselling')
+      .then((data) => {
+        const sessions = data?.sessions || [];
+        const scheduled = sessions.find((s) => s.status === 'Scheduled') || null;
+        setUpcomingCounselling(scheduled);
+      })
+      .catch(() => setUpcomingCounselling(null));
   }, []);
 
   const effectiveMood = latestMood?.moodCategory || academicStress?.combinedPredictedMood || academicStress?.predictedMood;
   const effectiveSuggestions = latestMood?.suggestedActivities || academicStress?.suggestions || [];
+  const doodleMoodTag = latestMood?.doodleMoodTag || null;
 
   return (
     <div className="dashboard">
@@ -76,21 +87,28 @@ export default function Dashboard() {
           {effectiveMood ? (
             <>
               <p style={{ margin: 0, color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>
-                {latestMood?.hybridMoodCategory ? (
+                {latestMood?.source === 'doodle_log' && latestMood?.interpretation ? (
+                  <>{latestMood.interpretation}</>
+                ) : latestMood?.hybridMoodCategory ? (
                   <>Hybrid mood (questionnaire + planner): <strong>{effectiveMood}</strong></>
                 ) : (
-                  <>Predicted mood: <strong>{effectiveMood}</strong></>
+                  <>Latest mood: <strong>{effectiveMood}</strong></>
                 )}
               </p>
-              {latestMood?.hybridScore != null && (
+              {latestMood?.hybridScore != null && latestMood?.source !== 'doodle_log' && (
                 <p style={{ margin: 0, color: 'var(--color-text-muted)', marginBottom: '0.75rem', fontSize: '0.9rem' }}>
                   Score: {latestMood.hybridScore}
+                </p>
+              )}
+              {doodleMoodTag && latestMood?.source !== 'doodle_log' && (
+                <p style={{ margin: 0, color: 'var(--color-text-muted)', marginBottom: '0.75rem', fontSize: '0.9rem' }}>
+                  Your recent expression indicates {doodleMoodTag.toLowerCase()}.
                 </p>
               )}
             </>
           ) : (
             <p style={{ margin: 0, color: 'var(--color-text-muted)', marginBottom: '0.75rem' }}>
-              Take today&apos;s Mood Check to see your hybrid mood (questionnaire + study planner).
+              Use the <strong>Mood Tracker</strong> to draw how you feel, or complete a mood assessment for a structured check-in.
             </p>
           )}
         </div>
@@ -148,6 +166,40 @@ export default function Dashboard() {
             </p>
           </div>
         )}
+
+        {/* Digital Twin: Future Wellness Prediction */}
+        <FutureWellnessPrediction />
+
+        {/* Upcoming counselling session */}
+        <div className="card" style={{ marginTop: '1rem', borderLeft: '4px solid var(--color-primary)' }}>
+          <h3 style={{ marginBottom: '0.5rem' }}>Upcoming Counselling Session</h3>
+          {upcomingCounselling ? (
+            <div style={{ display: 'grid', gap: '0.35rem' }}>
+              <p style={{ margin: 0, color: 'var(--color-text-muted)' }}>
+                You have been scheduled for a counselling session on{' '}
+                <strong style={{ color: 'var(--color-text)' }}>
+                  {upcomingCounselling.date ? new Date(upcomingCounselling.date).toLocaleDateString() : '—'}
+                </strong>{' '}
+                at{' '}
+                <strong style={{ color: 'var(--color-text)' }}>{upcomingCounselling.time || '—'}</strong>. Please be available.
+              </p>
+              <div style={{ display: 'grid', gap: '0.35rem', color: 'var(--color-text-muted)' }}>
+                <div>
+                  <strong style={{ color: 'var(--color-text)' }}>Mode:</strong> {upcomingCounselling.mode || '—'}
+                </div>
+                {upcomingCounselling.notes ? (
+                  <div>
+                    <strong style={{ color: 'var(--color-text)' }}>Notes:</strong> {upcomingCounselling.notes}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          ) : (
+            <p style={{ margin: 0, color: 'var(--color-text-muted)' }}>
+              No counselling session scheduled.
+            </p>
+          )}
+        </div>
 
         {/* 5. Daily Wellness Plan */}
         <div className="card" style={{ marginTop: '1rem' }}>

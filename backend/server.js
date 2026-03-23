@@ -17,6 +17,7 @@ const relaxationRoutes = require('./routes/relaxationRoutes');
 const forumRoutes = require('./routes/forumRoutes');
 const wellnessRoutes = require('./routes/wellnessRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const studentRoutes = require('./routes/studentRoutes');
 
 const app = express();
 
@@ -65,6 +66,7 @@ app.use('/api/relaxation', relaxationRoutes);
 app.use('/api/forum', forumRoutes);
 app.use('/api/wellness', wellnessRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/student', studentRoutes);
 
 // 404 for unknown routes
 app.use((req, res) => {

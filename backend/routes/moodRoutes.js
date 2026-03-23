@@ -14,12 +14,16 @@ const {
   getWeeklyReport,
   getCalendar,
 } = require('../controllers/moodAssessmentController');
+const { submitDoodleMood } = require('../controllers/moodDoodleController');
+const { submitDoodleLog } = require('../controllers/doodleMoodLogController');
 const { protect } = require('../middleware/authMiddleware');
 
 router.use(protect);
 
 router.get('/questions', getQuestions);
 router.post('/submit', submitAssessment);
+router.post('/doodle-submit', submitDoodleMood);
+router.post('/doodle-log', submitDoodleLog);
 router.get('/history', getHistory);
 router.get('/latest', getLatest);
 router.get('/academic-stress', getAcademicStress);

@@ -5,6 +5,7 @@
 
 import { NavLink } from 'react-router-dom';
 import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: '📊' },
@@ -15,10 +16,17 @@ const navItems = [
   { to: '/relax', label: 'Relaxation', icon: '🧘' },
   { to: '/forum', label: 'Forum', icon: '💬' },
   { to: '/profile', label: 'Profile', icon: '👤' },
+  { to: '/admin/counselling', label: 'Counselling', icon: '🧑‍⚕️', adminOnly: true },
 ];
 
 export default function Sidebar() {
   const [open, setOpen] = useState(false);
+  const { isAdmin } = useAuth();
+  const visibleNavItems = navItems.filter((item) => {
+    if (item.adminOnly && !isAdmin) return false;
+    if (isAdmin && item.to === '/mood-calendar') return false;
+    return true;
+  });
 
   const linkStyle = ({ isActive }) => ({
     display: 'flex',
@@ -77,7 +85,7 @@ export default function Sidebar() {
         }}
       >
         <nav>
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}

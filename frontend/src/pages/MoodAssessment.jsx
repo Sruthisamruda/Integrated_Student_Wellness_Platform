@@ -9,6 +9,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import DoodleMoodLogging from '../components/DoodleMoodLogging';
 
 const SCORE_LABELS = [
   { score: 1, text: 'Never' },
@@ -19,6 +20,7 @@ const SCORE_LABELS = [
 ];
 
 export default function MoodAssessment() {
+  const [activeTab, setActiveTab] = useState('assessment'); // assessment | doodle
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
   const [loading, setLoading] = useState(true);
@@ -90,6 +92,30 @@ export default function MoodAssessment() {
     }
   }, [answers, fetchHistory, questions]);
 
+  const showDoodleTab = activeTab === 'doodle';
+
+  if (showDoodleTab) {
+    return (
+      <div>
+        <h1>Mood Tracker</h1>
+        <p style={{ color: 'var(--color-text-muted)', marginBottom: '1.75rem', fontSize: '1.05rem' }}>
+          Express how you feel with either the questionnaire (primary) or doodling (optional).
+        </p>
+
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
+          <button type="button" className={activeTab === 'assessment' ? 'btn btn-primary' : 'btn btn-outline'} onClick={() => setActiveTab('assessment')}>
+            Take Mood Assessment
+          </button>
+          <button type="button" className={activeTab === 'doodle' ? 'btn btn-primary' : 'btn btn-outline'} onClick={() => setActiveTab('doodle')}>
+            Express Your Mood (Doodle)
+          </button>
+        </div>
+
+        <DoodleMoodLogging />
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="loading-wrap">
@@ -101,10 +127,19 @@ export default function MoodAssessment() {
 
   return (
     <div>
-      <h1>Mood Assessment</h1>
+      <h1>Mood Tracker</h1>
       <p style={{ color: 'var(--color-text-muted)', marginBottom: '1.75rem', fontSize: '1.05rem' }}>
-        Answer 5 short questions. Your results combine your answers with your Study Planner workload.
+        Answer 5 short questions (primary). Optionally, use doodling for quick expression.
       </p>
+
+      <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
+        <button type="button" className={activeTab === 'assessment' ? 'btn btn-primary' : 'btn btn-outline'} onClick={() => setActiveTab('assessment')}>
+          Take Mood Assessment
+        </button>
+        <button type="button" className={activeTab === 'doodle' ? 'btn btn-primary' : 'btn btn-outline'} onClick={() => setActiveTab('doodle')}>
+          Express Your Mood (Doodle)
+        </button>
+      </div>
 
       {error && <div className="message-error" role="alert">{error}</div>}
 

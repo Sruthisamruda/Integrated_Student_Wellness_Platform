@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Question = require('../models/Question');
 const MoodHistory = require('../models/MoodHistory');
+const DoodleMoodLog = require('../models/DoodleMoodLog');
 const Assignment = require('../models/Assignment');
 const RelaxationSession = require('../models/RelaxationSession');
 
@@ -260,6 +261,7 @@ const submitAssessment = async (req, res) => {
 
     await MoodHistory.create({
       user: req.user.id,
+      moodSource: 'questionnaire',
       moodScore: finalScoreClamped,
       moodCategory: moodLevel,
       suggestedActivities: activities,
@@ -303,7 +305,7 @@ const getHistory = async (req, res) => {
     const raw = Number(req.query.limit ?? 30);
     const limit = Number.isFinite(raw) ? clamp(Math.floor(raw), 1, 365) : 30;
 
-    const entries = await MoodHistory.find({ user: req.user.id })
+    const entries = await MoodHistory.find({ user: req.user.id, moodSource: 'questionnaire' })
       .sort({ createdAt: -1 })
       .limit(limit)
       .lean();
@@ -373,6 +375,7 @@ const getAcademicStress = async (req, res) => {
 
     const todayAssessment = await MoodHistory.findOne({
       user: req.user.id,
+      moodSource: 'questionnaire',
       createdAt: { $gte: startOfToday, $lte: endOfToday },
     })
       .sort({ createdAt: -1 })
@@ -459,6 +462,15 @@ const getAcademicStress = async (req, res) => {
   }
 };
 
+// Map doodle tracker categories to a rough numeric score for UI consistency
+const scoreFromDoodleCategory = (cat) => {
+  if (cat === 'Calm') return 12;
+  if (cat === 'Mild Stress') return 16;
+  if (cat === 'Anxious') return 20;
+  if (cat === 'Highly Stressed') return 24;
+  return 14;
+};
+
 // GET /api/mood/latest
 const getLatest = async (req, res) => {
   try {
@@ -466,7 +478,38 @@ const getLatest = async (req, res) => {
       return res.status(403).json({ message: 'Admins cannot take mood assessments' });
     }
 
-    const latest = await MoodHistory.findOne({ user: req.user.id }).sort({ createdAt: -1 }).lean();
+    const [latestDoodle, latestQuestionnaire, latestAnyHistory] = await Promise.all([
+      DoodleMoodLog.findOne({ user: req.user.id }).sort({ createdAt: -1 }).lean(),
+      MoodHistory.findOne({ user: req.user.id, moodSource: 'questionnaire' }).sort({ createdAt: -1 }).lean(),
+      MoodHistory.findOne({ user: req.user.id }).sort({ createdAt: -1 }).lean(),
+    ]);
+
+    const tDoodle = latestDoodle ? new Date(latestDoodle.createdAt).getTime() : 0;
+    const tQ = latestQuestionnaire ? new Date(latestQuestionnaire.createdAt).getTime() : 0;
+
+    // Newest wins between doodle log and questionnaire (doodle tracker updates dashboard when newer)
+    if (latestDoodle && (!latestQuestionnaire || tDoodle >= tQ)) {
+      const moodCategory = latestDoodle.moodCategory;
+      return res.status(200).json({
+        id: latestDoodle._id,
+        createdAt: latestDoodle.createdAt,
+        source: 'doodle_log',
+        moodScore: scoreFromDoodleCategory(moodCategory),
+        moodCategory,
+        hybridScore: null,
+        hybridMoodCategory: null,
+        suggestedActivities: latestDoodle.suggestedActivities || [],
+        interpretation: `Your drawing indicates: ${moodCategory}`,
+        questionnaireScore: null,
+        stressModifier: null,
+        pendingTasks: null,
+        overdueTasks: null,
+        completedTasks: null,
+        doodleMoodTag: moodCategory,
+      });
+    }
+
+    const latest = latestQuestionnaire || latestAnyHistory;
     if (!latest) {
       return res.status(200).json(null);
     }
@@ -477,6 +520,7 @@ const getLatest = async (req, res) => {
     res.status(200).json({
       id: latest._id,
       createdAt: latest.createdAt,
+      source: latest.moodSource === 'questionnaire' ? 'questionnaire' : 'mood_history',
       moodScore: effectiveScore,
       moodCategory: effectiveMood,
       hybridScore: latest.hybridScore,
@@ -487,6 +531,8 @@ const getLatest = async (req, res) => {
       pendingTasks: latest.pendingTasks,
       overdueTasks: latest.overdueTasks,
       completedTasks: latest.completedTasks,
+      doodleMoodTag: latest.doodleMoodTag,
+      interpretation: null,
     });
   } catch (err) {
     console.error('Get latest mood error:', err);
@@ -505,7 +551,7 @@ const getWeeklyReport = async (req, res) => {
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
     const [moodEntries, completedTasks, pendingTasks, relaxationSessions] = await Promise.all([
-      MoodHistory.find({ user: req.user.id, createdAt: { $gte: weekAgo } }).lean(),
+      MoodHistory.find({ user: req.user.id, moodSource: 'questionnaire', createdAt: { $gte: weekAgo } }).lean(),
       Assignment.countDocuments({ user: req.user.id, completed: true }),
       Assignment.countDocuments({ user: req.user.id, completed: false }),
       RelaxationSession.find({ user: req.user.id, createdAt: { $gte: weekAgo } }).lean(),
@@ -608,7 +654,7 @@ const getCalendar = async (req, res) => {
     const end = new Date(year, month + 1, 0, 23, 59, 59, 999);
 
     const [moodEntries, assignments, relaxationSessions] = await Promise.all([
-      MoodHistory.find({ user: req.user.id, createdAt: { $gte: start, $lte: end } }).lean(),
+      MoodHistory.find({ user: req.user.id, moodSource: 'questionnaire', createdAt: { $gte: start, $lte: end } }).lean(),
       Assignment.find({ user: req.user.id, dueDate: { $gte: start, $lte: end } }).lean(),
       RelaxationSession.find({ user: req.user.id, createdAt: { $gte: start, $lte: end } }).lean(),
     ]);
