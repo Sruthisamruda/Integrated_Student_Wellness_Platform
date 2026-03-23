@@ -34,6 +34,7 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 // --- CORS (API routes only) ---
 const allowedOrigins = [
   process.env.FRONTEND_URL,
+  process.env.RENDER_EXTERNAL_URL,   // Render automatically sets this to the service URL
   'http://localhost:3000',
   'http://localhost:5173',
   'http://127.0.0.1:3000',
