@@ -20,10 +20,18 @@ const adminRoutes = require('./routes/adminRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 
 const app = express();
+const path = require('path');
 
-// --- Middleware ---
+// --- Serve static files BEFORE CORS ---
+// This prevents CORS from blocking asset requests made by <script crossorigin>.
+// Frontend is built into backend/public during Render's build step.
+const frontendDist = path.join(__dirname, 'public');
+app.use(express.static(frontendDist));
 
-// CORS: allow frontend origin (and common dev ports)
+// Serve uploaded forum images (also static, no CORS needed)
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
+// --- CORS (API routes only) ---
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   'http://localhost:3000',
@@ -48,10 +56,6 @@ app.use(
 // Parse JSON request bodies
 app.use(express.json());
 
-// Serve uploaded forum images
-const path = require('path');
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
-
 // Optional: health check for deployment
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
@@ -68,13 +72,16 @@ app.use('/api/wellness', wellnessRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/student', studentRoutes);
 
-// Serve React frontend (production build)
-const frontendDist = path.join(__dirname, '..', 'frontend', 'dist');
-app.use(express.static(frontendDist));
-
-// Catch-all: send index.html for any non-API route (React Router support)
+// Catch-all: serve index.html for React Router (non-API routes)
+// express.static at the top handles actual asset files
 app.get('*', (req, res) => {
-  res.sendFile(path.join(frontendDist, 'index.html'));
+  const indexPath = path.join(frontendDist, 'index.html');
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      console.error('Failed to serve index.html:', err.message, '| Path:', indexPath);
+      res.status(500).json({ message: 'Frontend not found. Ensure the build step ran correctly.' });
+    }
+  });
 });
 
 // Global error handler (e.g. CORS errors)
