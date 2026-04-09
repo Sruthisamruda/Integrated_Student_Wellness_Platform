@@ -1,111 +1,105 @@
 /**
- * Side navigation: links to Dashboard, Mood, Study, Relaxation, Profile.
- * Clean nav with icons and refined active/hover states.
+ * Sidebar — professional icon-based navigation using lucide-react + Tailwind.
  */
 
 import { NavLink } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import {
+  LayoutDashboard,
+  ClipboardList,
+  CalendarDays,
+  BookOpen,
+  HeartPulse,
+  MessageSquare,
+  User,
+  Stethoscope,
+  Menu,
+  X,
+} from 'lucide-react';
 
-const navItems = [
-  { to: '/dashboard', label: 'Dashboard', icon: '📊' },
-  { to: '/mood', label: 'Mood Tracker', icon: '😊' },
-  { to: '/mood-assessment', label: 'Mood Assessment', icon: '📝' },
-  { to: '/mood-calendar', label: 'Mood Calendar', icon: '📅' },
-  { to: '/study', label: 'Study Planner', icon: '📚' },
-  { to: '/relax', label: 'Relaxation', icon: '🧘' },
-  { to: '/forum', label: 'Forum', icon: '💬' },
-  { to: '/profile', label: 'Profile', icon: '👤' },
-  { to: '/admin/counselling', label: 'Counselling', icon: '🧑‍⚕️', adminOnly: true },
+const NAV_ITEMS = [
+  { to: '/dashboard',      label: 'Dashboard',       icon: LayoutDashboard },
+  { to: '/mood-assessment', label: 'Mood Assessment', icon: ClipboardList },
+  { to: '/mood-calendar',  label: 'Mood Calendar',   icon: CalendarDays },
+  { to: '/study',          label: 'Study Planner',   icon: BookOpen },
+  { to: '/relax',          label: 'Relaxation',      icon: HeartPulse },
+  { to: '/forum',          label: 'Forum',            icon: MessageSquare },
+  { to: '/profile',        label: 'Profile',          icon: User },
+  { to: '/admin/counselling', label: 'Counselling',  icon: Stethoscope, adminOnly: true },
 ];
 
 export default function Sidebar() {
   const [open, setOpen] = useState(false);
   const { isAdmin } = useAuth();
-  const visibleNavItems = navItems.filter((item) => {
+
+  const items = NAV_ITEMS.filter((item) => {
     if (item.adminOnly && !isAdmin) return false;
     if (isAdmin && item.to === '/mood-calendar') return false;
     return true;
   });
 
-  const linkStyle = ({ isActive }) => ({
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem',
-    padding: '0.75rem 1rem',
-    color: isActive ? 'var(--color-primary)' : 'var(--color-text)',
-    textDecoration: 'none',
-    fontWeight: isActive ? 600 : 500,
-    background: isActive ? 'var(--color-primary-soft)' : 'transparent',
-    borderRadius: 'var(--radius)',
-    marginBottom: '0.25rem',
-    fontSize: '0.9375rem',
-    transition: 'all var(--transition)',
-  });
+  const navContent = (
+    <nav className="flex flex-col gap-1 p-4">
+      {items.map(({ to, label, icon: Icon }) => (
+        <NavLink
+          key={to}
+          to={to}
+          onClick={() => setOpen(false)}
+          className={({ isActive }) =>
+            [
+              'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors duration-150',
+              isActive
+                ? 'bg-blue-50 text-blue-600'
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800',
+            ].join(' ')
+          }
+        >
+          <Icon size={18} strokeWidth={1.75} className="flex-shrink-0" />
+          {label}
+        </NavLink>
+      ))}
+    </nav>
+  );
 
   return (
     <>
-      {/* Mobile toggle */}
+      {/* Mobile toggle button */}
       <button
         type="button"
-        className="btn btn-primary"
         aria-label="Toggle menu"
         onClick={() => setOpen((o) => !o)}
-        style={{
-          position: 'fixed',
-          bottom: '1.25rem',
-          left: '1.25rem',
-          zIndex: 101,
-          width: '48px',
-          height: '48px',
-          borderRadius: '50%',
-          padding: 0,
-          boxShadow: 'var(--shadow)',
-        }}
+        className="fixed bottom-5 left-5 z-[101] md:hidden w-12 h-12 rounded-full bg-blue-600 text-white shadow-lg flex items-center justify-center"
       >
-        {open ? '✕' : '☰'}
+        {open ? <X size={20} /> : <Menu size={20} />}
       </button>
 
+      {/* Mobile overlay */}
+      {open && (
+        <div
+          role="presentation"
+          className="fixed inset-0 z-[99] bg-black/20 md:hidden"
+          onClick={() => setOpen(false)}
+        />
+      )}
+
+      {/* Sidebar panel */}
       <aside
-        className="sidebar"
-        style={{
-          width: 'var(--sidebar-width)',
-          minWidth: 'var(--sidebar-width)',
-          background: 'linear-gradient(180deg, var(--color-surface) 0%, #fafcfd 100%)',
-          borderRight: '1px solid var(--color-border)',
-          padding: '1.25rem 1rem',
-          display: open ? 'block' : 'none',
-          position: 'fixed',
-          left: 0,
-          top: 'var(--header-height)',
-          bottom: 0,
-          zIndex: 100,
-          overflowY: 'auto',
-          boxShadow: 'var(--shadow-sm)',
-        }}
+        className={[
+          'bg-white border-r border-gray-100 overflow-y-auto flex-shrink-0',
+          'fixed left-0 bottom-0 top-[64px] z-[100] w-[240px]',
+          'transition-transform duration-200',
+          open ? 'translate-x-0' : '-translate-x-full',
+          'md:translate-x-0 md:static md:top-auto md:bottom-auto md:z-auto',
+        ].join(' ')}
       >
-        <nav>
-          {visibleNavItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              style={linkStyle}
-              onClick={() => setOpen(false)}
-            >
-              <span style={{ fontSize: '1.25rem' }}>{item.icon}</span>
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
+        {navContent}
       </aside>
 
       <style>{`
         @media (min-width: 768px) {
           .sidebar { display: block !important; position: static !important; box-shadow: none; }
           button[aria-label="Toggle menu"] { display: none !important; }
-        }
-        @media (max-width: 767px) {
-          .main-content { margin-left: 0 !important; }
         }
       `}</style>
     </>

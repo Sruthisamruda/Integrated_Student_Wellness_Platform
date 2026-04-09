@@ -1,121 +1,88 @@
 /**
- * Top navigation: app title and user menu (profile, logout).
- * Clean header with subtle gradient and refined styling.
+ * Header — professional top bar with lucide-react icons + Tailwind.
  */
 
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { Leaf, ChevronDown, LogOut, User as UserIcon } from 'lucide-react';
 
 export default function Header() {
   const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  // Close on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const displayName = user?.name || user?.email?.split('@')[0] || 'User';
+  const initials = displayName
+    .split(' ')
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
 
   return (
-    <header
-      style={{
-        height: 'var(--header-height)',
-        background: 'linear-gradient(135deg, var(--color-surface) 0%, #fafcfd 100%)',
-        boxShadow: 'var(--shadow-sm)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 1.5rem',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-        borderBottom: '1px solid var(--color-border)',
-      }}
-    >
+    <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-50 shadow-sm">
+      {/* Logo */}
       <Link
         to="/dashboard"
-        className="header-logo"
-        style={{
-          color: 'var(--color-primary)',
-          textDecoration: 'none',
-          fontWeight: 700,
-          fontSize: '1.25rem',
-          letterSpacing: '-0.02em',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-        }}
+        className="flex items-center gap-2 text-blue-600 font-semibold text-lg tracking-tight no-underline hover:opacity-80 transition-opacity"
       >
-        <span style={{ fontSize: '1.5rem' }}>🌱</span>
-        Student Wellness
+        <Leaf size={20} strokeWidth={2} className="text-blue-500" />
+        <span className="text-gray-800">Student</span>
+        <span className="text-blue-600">Wellness</span>
       </Link>
 
+      {/* User menu */}
       {user && (
-        <div style={{ position: 'relative' }}>
+        <div className="relative" ref={menuRef}>
           <button
             type="button"
-            className="btn btn-outline"
             onClick={() => setMenuOpen((o) => !o)}
             aria-expanded={menuOpen}
-            aria-haspopup="true"
-            style={{
-              padding: '0.5rem 1rem',
-              fontSize: '0.9375rem',
-              maxWidth: '180px',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors text-sm font-medium text-gray-700"
           >
-            {user.name || user.email}
+            {/* Avatar circle */}
+            <span className="w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-semibold flex items-center justify-center flex-shrink-0">
+              {initials}
+            </span>
+            <span className="hidden sm:block max-w-[140px] truncate">{displayName}</span>
+            <ChevronDown
+              size={14}
+              className={`text-gray-400 transition-transform duration-200 ${menuOpen ? 'rotate-180' : ''}`}
+            />
           </button>
+
           {menuOpen && (
-            <>
-              <div
-                role="presentation"
-                style={{ position: 'fixed', inset: 0, zIndex: 99 }}
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50">
+              <Link
+                to="/profile"
                 onClick={() => setMenuOpen(false)}
-              />
-              <nav
-                role="menu"
-                style={{
-                  position: 'absolute',
-                  right: 0,
-                  top: '100%',
-                  marginTop: '0.5rem',
-                  background: 'var(--color-surface)',
-                  borderRadius: 'var(--radius)',
-                  boxShadow: 'var(--shadow-md)',
-                  padding: '0.5rem',
-                  minWidth: '180px',
-                  zIndex: 100,
-                  border: '1px solid var(--color-border)',
-                }}
+                className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors no-underline"
               >
-                <Link
-                  to="/profile"
-                  role="menuitem"
-                  style={{
-                    display: 'block',
-                    padding: '0.6rem 1rem',
-                    color: 'var(--color-text)',
-                    textDecoration: 'none',
-                    borderRadius: 'var(--radius)',
-                    fontSize: '0.9375rem',
-                    transition: 'background var(--transition)',
-                  }}
-                  className="dropdown-link"
-                  onClick={() => setMenuOpen(false)}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-primary-soft)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                >
-                  Profile
-                </Link>
-                <button
-                  type="button"
-                  className="btn btn-outline"
-                  style={{ width: '100%', justifyContent: 'flex-start', marginTop: '0.25rem', padding: '0.6rem 1rem' }}
-                  onClick={() => { logout(); setMenuOpen(false); }}
-                >
-                  Log out
-                </button>
-              </nav>
-            </>
+                <UserIcon size={15} className="text-gray-400" />
+                Profile
+              </Link>
+              <div className="my-1 border-t border-gray-100" />
+              <button
+                type="button"
+                onClick={() => { logout(); setMenuOpen(false); }}
+                className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
+              >
+                <LogOut size={15} className="text-red-400" />
+                Log out
+              </button>
+            </div>
           )}
         </div>
       )}

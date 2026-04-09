@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Question = require('../models/Question');
 const MoodHistory = require('../models/MoodHistory');
 const DoodleMoodLog = require('../models/DoodleMoodLog');
+const DoodleEntry = require('../models/DoodleEntry');
 const Assignment = require('../models/Assignment');
 const RelaxationSession = require('../models/RelaxationSession');
 
@@ -255,7 +256,8 @@ const submitAssessment = async (req, res) => {
     // Hybrid mood: (Questionnaire × 0.6) + (PlannerStress × 0.4)
     const plannerRaw = await computePlannerStressScore(req.user.id);
     const plannerScaled = Math.min(plannerRaw, 7) * (25 / 7);
-    const hybridScore = Math.round((questionnaireScore * 0.6) + (plannerScaled * 0.4) * 10) / 10;
+    // Round to 1 decimal place — wrapping the full sum inside Math.round() then /10
+    const hybridScore = Math.round(((questionnaireScore * 0.6) + (plannerScaled * 0.4)) * 10) / 10;
     const hybridMoodCategory = mapHybridMood(hybridScore);
     const activities = suggestionsForLevel(hybridMoodCategory);
 
@@ -462,33 +464,112 @@ const getAcademicStress = async (req, res) => {
   }
 };
 
-// Map doodle tracker categories to a rough numeric score for UI consistency
+// Map DoodleEntry inferredMood labels → dashboard-compatible mood categories
+const mapDoodleEntryMood = (inferredMood) => {
+  const map = {
+    'Highly Stressed': 'Highly Stressed',
+    Stressed:          'Mild Stress',
+    Angry:             'Anxious',
+    Calm:              'Calm',
+    Happy:             'Happy / Balanced',
+    Tired:             'Calm',
+    Neutral:           'Calm',
+  };
+  return map[inferredMood] || 'Calm';
+};
+
+// Convert a dashboard mood category to a numeric score (5-25 range)
 const scoreFromDoodleCategory = (cat) => {
-  if (cat === 'Calm') return 12;
-  if (cat === 'Mild Stress') return 16;
-  if (cat === 'Anxious') return 20;
-  if (cat === 'Highly Stressed') return 24;
-  return 14;
+  if (cat === 'Happy / Balanced') return 7;
+  if (cat === 'Calm')             return 12;
+  if (cat === 'Mild Stress')      return 16;
+  if (cat === 'Anxious')          return 20;
+  if (cat === 'Highly Stressed')  return 24;
+  return 12; // fallback
 };
 
 // GET /api/mood/latest
+// Returns a collective mood derived from BOTH the latest questionnaire and latest doodle when
+// both are present. Falls back to whichever single source exists.
 const getLatest = async (req, res) => {
   try {
     if (req.user.role === 'admin') {
       return res.status(403).json({ message: 'Admins cannot take mood assessments' });
     }
 
-    const [latestDoodle, latestQuestionnaire, latestAnyHistory] = await Promise.all([
+    const [doodleLog, doodleEntry, latestQuestionnaire, latestAnyHistory] = await Promise.all([
       DoodleMoodLog.findOne({ user: req.user.id }).sort({ createdAt: -1 }).lean(),
+      DoodleEntry.findOne({ userId: req.user.id }).sort({ createdAt: -1 }).lean(),
       MoodHistory.findOne({ user: req.user.id, moodSource: 'questionnaire' }).sort({ createdAt: -1 }).lean(),
       MoodHistory.findOne({ user: req.user.id }).sort({ createdAt: -1 }).lean(),
     ]);
 
-    const tDoodle = latestDoodle ? new Date(latestDoodle.createdAt).getTime() : 0;
-    const tQ = latestQuestionnaire ? new Date(latestQuestionnaire.createdAt).getTime() : 0;
+    // Normalise both doodle sources into a single { moodCategory, createdAt, source } object.
+    // DoodleEntry (canvas) is the primary source; DoodleMoodLog is the legacy image-based source.
+    let latestDoodle = null;
+    const tLog   = doodleLog   ? new Date(doodleLog.createdAt).getTime()   : 0;
+    const tEntry = doodleEntry ? new Date(doodleEntry.createdAt).getTime() : 0;
+    if (doodleEntry && tEntry >= tLog) {
+      latestDoodle = {
+        _id:       doodleEntry._id,
+        createdAt: doodleEntry.createdAt,
+        moodCategory: mapDoodleEntryMood(doodleEntry.inferredMood),
+        rawMood:   doodleEntry.inferredMood,
+        suggestedActivities: suggestionsForLevel(mapDoodleEntryMood(doodleEntry.inferredMood)),
+        _source: 'doodle_entry',
+      };
+    } else if (doodleLog) {
+      latestDoodle = {
+        _id:       doodleLog._id,
+        createdAt: doodleLog.createdAt,
+        moodCategory: doodleLog.moodCategory,
+        rawMood:   doodleLog.moodCategory,
+        suggestedActivities: doodleLog.suggestedActivities || [],
+        _source: 'doodle_log',
+      };
+    }
 
-    // Newest wins between doodle log and questionnaire (doodle tracker updates dashboard when newer)
-    if (latestDoodle && (!latestQuestionnaire || tDoodle >= tQ)) {
+    // ── CASE 1: Both questionnaire AND doodle exist → combined collective analysis ──
+    if (latestDoodle && latestQuestionnaire) {
+      // Re-derive the questionnaire score correctly from stored raw data
+      // (guards against old records that stored the wrong hybridScore).
+      const qRaw = latestQuestionnaire.questionnaireScore ?? latestQuestionnaire.finalScoreClamped ?? 15;
+      const plannerRaw = latestQuestionnaire.plannerStressScore ?? 0;
+      const plannerScaled = Math.min(plannerRaw, 7) * (25 / 7);
+      const correctedQScore = Math.round(((qRaw * 0.6) + (plannerScaled * 0.4)) * 10) / 10;
+
+      // Doodle converts its category to a numeric score in the same 5-25 range
+      const doodleScore = scoreFromDoodleCategory(latestDoodle.moodCategory);
+
+      // Final combined score: 60% questionnaire + 40% doodle
+      const combinedScore = Math.round(((correctedQScore * 0.6) + (doodleScore * 0.4)) * 10) / 10;
+      const combinedMood  = mapHybridMood(combinedScore);
+      const activities    = suggestionsForLevel(combinedMood);
+
+      return res.status(200).json({
+        id: latestQuestionnaire._id,
+        createdAt: latestQuestionnaire.createdAt,
+        source: 'combined',
+        moodScore: combinedScore,
+        moodCategory: combinedMood,
+        hybridScore: combinedScore,
+        hybridMoodCategory: combinedMood,
+        suggestedActivities: activities,
+        interpretation: `Combined mood from questionnaire & doodle expression`,
+        questionnaireScore: latestQuestionnaire.questionnaireScore,
+        questionnaireContribution: correctedQScore,
+        doodleMoodTag: latestDoodle.moodCategory,   // mapped dashboard category
+        doodleRawMood: latestDoodle.rawMood,         // original canvas label (e.g. 'Stressed')
+        doodleContribution: doodleScore,
+        stressModifier: latestQuestionnaire.stressModifier,
+        pendingTasks: latestQuestionnaire.pendingTasks,
+        overdueTasks: latestQuestionnaire.overdueTasks,
+        completedTasks: latestQuestionnaire.completedTasks,
+      });
+    }
+
+    // ── CASE 2: Only doodle exists ──
+    if (latestDoodle && !latestQuestionnaire) {
       const moodCategory = latestDoodle.moodCategory;
       return res.status(200).json({
         id: latestDoodle._id,
@@ -499,33 +580,41 @@ const getLatest = async (req, res) => {
         hybridScore: null,
         hybridMoodCategory: null,
         suggestedActivities: latestDoodle.suggestedActivities || [],
-        interpretation: `Your drawing indicates: ${moodCategory}`,
+        interpretation: `Your drawing indicates: ${latestDoodle.rawMood || moodCategory}`,
         questionnaireScore: null,
         stressModifier: null,
         pendingTasks: null,
         overdueTasks: null,
         completedTasks: null,
         doodleMoodTag: moodCategory,
+        doodleRawMood: latestDoodle.rawMood || moodCategory,
       });
     }
 
+    // ── CASE 3: Only questionnaire (or any history) exists ──
     const latest = latestQuestionnaire || latestAnyHistory;
     if (!latest) {
       return res.status(200).json(null);
     }
 
-    const effectiveMood = latest.hybridMoodCategory || latest.moodCategory;
-    const effectiveScore = latest.hybridScore ?? latest.moodScore;
+    // Re-derive the correct hybrid score from raw stored data to fix old broken records
+    const qRaw      = latest.questionnaireScore ?? latest.finalScoreClamped ?? 15;
+    const plannerRaw = latest.plannerStressScore ?? 0;
+    const plannerScaled = Math.min(plannerRaw, 7) * (25 / 7);
+    const correctedScore = (latest.moodSource === 'questionnaire' && qRaw != null)
+      ? Math.round(((qRaw * 0.6) + (plannerScaled * 0.4)) * 10) / 10
+      : (latest.hybridScore ?? latest.moodScore);
+    const correctedMood  = mapHybridMood(correctedScore) || latest.hybridMoodCategory || latest.moodCategory;
 
     res.status(200).json({
       id: latest._id,
       createdAt: latest.createdAt,
       source: latest.moodSource === 'questionnaire' ? 'questionnaire' : 'mood_history',
-      moodScore: effectiveScore,
-      moodCategory: effectiveMood,
-      hybridScore: latest.hybridScore,
-      hybridMoodCategory: latest.hybridMoodCategory,
-      suggestedActivities: latest.suggestedActivities || [],
+      moodScore: correctedScore,
+      moodCategory: correctedMood,
+      hybridScore: correctedScore,
+      hybridMoodCategory: correctedMood,
+      suggestedActivities: suggestionsForLevel(correctedMood) || latest.suggestedActivities || [],
       questionnaireScore: latest.questionnaireScore,
       stressModifier: latest.stressModifier,
       pendingTasks: latest.pendingTasks,

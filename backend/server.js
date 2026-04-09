@@ -18,6 +18,7 @@ const forumRoutes = require('./routes/forumRoutes');
 const wellnessRoutes = require('./routes/wellnessRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const studentRoutes = require('./routes/studentRoutes');
+const doodleRoutes = require('./routes/doodleRoutes');
 
 const app = express();
 const path = require('path');
@@ -72,6 +73,7 @@ app.use('/api/forum', forumRoutes);
 app.use('/api/wellness', wellnessRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/student', studentRoutes);
+app.use('/api/doodle', doodleRoutes);
 
 // Catch-all: serve index.html for React Router (non-API routes)
 // express.static at the top handles actual asset files

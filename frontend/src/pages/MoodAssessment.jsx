@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { apiRequest } from '../api';
 import {
   CartesianGrid,
@@ -9,7 +10,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import DoodleMoodLogging from '../components/DoodleMoodLogging';
+import DoodleCanvas from '../components/DoodleCanvas';
 
 const SCORE_LABELS = [
   { score: 1, text: 'Never' },
@@ -20,7 +21,10 @@ const SCORE_LABELS = [
 ];
 
 export default function MoodAssessment() {
-  const [activeTab, setActiveTab] = useState('assessment'); // assessment | doodle
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(
+    location.state?.tab === 'doodle' ? 'doodle' : 'assessment'
+  ); // assessment | doodle
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
   const [loading, setLoading] = useState(true);
@@ -111,7 +115,7 @@ export default function MoodAssessment() {
           </button>
         </div>
 
-        <DoodleMoodLogging />
+        <DoodleCanvas />
       </div>
     );
   }

@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { Leaf } from 'lucide-react';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -49,7 +50,9 @@ export default function Login() {
     <div className="auth-page">
       <div className="auth-card">
         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          <span style={{ fontSize: '2.5rem' }}>🌱</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 52, height: 52, borderRadius: 14, background: '#eff6ff' }}>
+            <Leaf size={26} strokeWidth={1.75} style={{ color: '#2563eb' }} />
+          </span>
         </div>
         <h1>Log in</h1>
         <p className="auth-subtitle">Welcome back. Sign in to continue.</p>

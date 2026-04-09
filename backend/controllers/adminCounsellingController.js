@@ -76,7 +76,8 @@ const createCounsellingSession = async (req, res) => {
     if (!user) return res.status(404).json({ message: 'Student not found' });
     if (user.role !== 'user') return res.status(400).json({ message: 'Only students can be scheduled' });
 
-    const scheduledDate = new Date(date);
+    // Parse date in local time to avoid UTC day-shift issues.
+    const scheduledDate = new Date(`${date}T00:00:00`);
     if (Number.isNaN(scheduledDate.getTime())) return res.status(400).json({ message: 'Invalid date' });
 
     const timeSafe = String(time).trim().slice(0, 20);
@@ -89,7 +90,7 @@ const createCounsellingSession = async (req, res) => {
       time: timeSafe,
       mode: modeSafe,
       notes: notesSafe,
-      status: 'Scheduled',
+      status: 'upcoming',
     });
 
     res.status(201).json({

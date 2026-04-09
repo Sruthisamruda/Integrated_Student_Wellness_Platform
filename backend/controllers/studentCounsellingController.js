@@ -6,17 +6,50 @@
 const CounsellingSession = require('../models/CounsellingSession');
 
 const parseScheduledAt = (date, time) => {
-  // Build a sortable Date: YYYY-MM-DD + HH:mm
+  // Parse in *local* timezone: date (yyyy-mm-dd) + time (HH:mm)
   try {
-    const d = new Date(date);
+    if (!date) return null;
+    const d = date instanceof Date ? date : new Date(date);
     if (Number.isNaN(d.getTime())) return null;
+
+    const y = d.getFullYear();
+    const m = d.getMonth();
+    const day = d.getDate();
+
     const t = String(time || '').trim();
-    if (!t) return d;
-    // If time format is "HH:mm", append to ISO date.
-    return new Date(`${d.toISOString().slice(0, 10)}T${t}:00`);
+    if (!t) return new Date(y, m, day, 0, 0, 0, 0);
+
+    const parts = t.split(':');
+    if (parts.length < 2) return null;
+
+    const hh = Number(parts[0]);
+    const mm = Number(parts[1]);
+    if (!Number.isFinite(hh) || !Number.isFinite(mm)) return null;
+
+    return new Date(y, m, day, hh, mm, 0, 0);
   } catch {
     return null;
   }
+};
+
+const normalizeStatus = (status) => {
+  // Backward compatibility for older documents.
+  if (status === 'Scheduled') return 'upcoming';
+  if (status === 'Completed') return 'completed';
+  if (status === 'Cancelled') return 'cancelled';
+  if (status === 'upcoming' || status === 'completed' || status === 'cancelled') return status;
+  return 'upcoming';
+};
+
+const updateSessionStatus = (session) => {
+  const now = new Date();
+  const sessionTime = session.dateTime;
+
+  if (sessionTime && sessionTime < now && session.status !== 'completed') {
+    session.status = 'completed';
+  }
+
+  return session;
 };
 
 const getStudentCounsellingSessions = async (req, res) => {
@@ -30,21 +63,42 @@ const getStudentCounsellingSessions = async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-    // Sort upcoming sessions first (Scheduled > others), then by date/time.
     const normalized = sessions
-      .map((s) => ({
-        ...s,
-        scheduledAt: parseScheduledAt(s.date, s.time),
-      }))
-      .sort((a, b) => {
-        const aRank = a.status === 'Scheduled' ? 0 : a.status === 'Completed' ? 1 : 2;
-        const bRank = b.status === 'Scheduled' ? 0 : b.status === 'Completed' ? 1 : 2;
-        if (aRank !== bRank) return aRank - bRank;
-        if (a.scheduledAt && b.scheduledAt) return a.scheduledAt - b.scheduledAt;
-        return 0;
-      });
+      .map((s) => {
+        const dateTime = parseScheduledAt(s.date, s.time);
+        return {
+          ...s,
+          status: normalizeStatus(s.status),
+          dateTime,
+        };
+      })
+      .filter((s) => s.dateTime && !Number.isNaN(s.dateTime.getTime()))
+      .map(updateSessionStatus);
 
-    res.status(200).json({ sessions: normalized });
+    const now = new Date();
+
+    // Separate sessions correctly (and disjoint by status).
+    const upcomingSessions = normalized.filter(
+      (s) => s.dateTime > now && s.status === 'upcoming',
+    );
+
+    const completedSessions = normalized.filter(
+      (s) => s.dateTime <= now || s.status === 'completed',
+    );
+
+    // Prevent duplicate display: upcomingSessions only includes 'upcoming',
+    // completedSessions includes past sessions OR explicitly completed.
+
+    res.status(200).json({
+      upcomingSessions: upcomingSessions.map((s) => ({
+        ...s,
+        dateTime: s.dateTime.toISOString(),
+      })),
+      completedSessions: completedSessions.map((s) => ({
+        ...s,
+        dateTime: s.dateTime.toISOString(),
+      })),
+    });
   } catch (err) {
     console.error('Get student counselling sessions error:', err);
     res.status(500).json({ message: 'Failed to fetch counselling sessions' });

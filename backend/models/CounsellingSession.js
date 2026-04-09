@@ -37,8 +37,8 @@ const counsellingSessionSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['Scheduled', 'Completed', 'Cancelled'],
-      default: 'Scheduled',
+      enum: ['upcoming', 'completed', 'cancelled'],
+      default: 'upcoming',
     },
   },
   {

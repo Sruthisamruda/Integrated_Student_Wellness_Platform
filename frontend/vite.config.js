@@ -1,17 +1,16 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [tailwindcss(), react()],
   server: {
     port: 5173,
     proxy: {
-      // Optional: proxy /api to backend to avoid CORS in dev
       '/api': {
         target: 'http://localhost:5000',
         changeOrigin: true,
       },
-      // Proxy uploaded images so img src="/uploads/..." works from same origin
       '/uploads': {
         target: 'http://localhost:5000',
         changeOrigin: true,

@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { Leaf } from 'lucide-react';
 
 const MIN_PASSWORD = 6;
 
@@ -56,7 +57,9 @@ export default function Signup() {
     <div className="auth-page">
       <div className="auth-card">
         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          <span style={{ fontSize: '2.5rem' }}>🌱</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 52, height: 52, borderRadius: 14, background: '#eff6ff' }}>
+            <Leaf size={26} strokeWidth={1.75} style={{ color: '#2563eb' }} />
+          </span>
         </div>
         <h1>Sign up</h1>
         <p className="auth-subtitle">Create an account to get started.</p>

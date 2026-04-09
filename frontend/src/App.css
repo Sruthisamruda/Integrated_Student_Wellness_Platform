@@ -57,11 +57,15 @@ body {
   display: flex;
   flex: 1;
   min-height: calc(100vh - var(--header-height));
+  overflow: hidden;
 }
 
+/* On desktop the Tailwind sidebar is static, so main-content sits next to it */
 @media (min-width: 768px) {
   .sidebar {
     position: static !important;
+    transform: none !important;
+    display: block !important;
   }
 }
 
@@ -375,4 +379,73 @@ p {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* Doodle canvas (glassmorphism + pills) */
+.glass-card {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.35) 100%);
+  border: 1px solid rgba(226, 238, 245, 0.95);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-md);
+  transition: box-shadow var(--transition), transform var(--transition), border-color var(--transition);
+}
+
+.glass-card:hover {
+  box-shadow: var(--shadow-md), 0 18px 50px rgba(30, 77, 107, 0.12);
+  transform: translateY(-2px);
+  border-color: rgba(45, 139, 106, 0.35);
+}
+
+.canvas-shell {
+  margin-top: 1rem;
+  border-radius: 16px;
+  padding: 12px;
+  border: 1px solid rgba(226, 238, 245, 0.95);
+  background: rgba(255, 255, 255, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.mood-pill {
+  padding: 0.55rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid rgba(226, 238, 245, 0.95);
+  background: rgba(255, 255, 255, 0.65);
+  color: var(--color-primary);
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform var(--transition), background var(--transition), box-shadow var(--transition), border-color var(--transition);
+}
+
+.mood-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.mood-pill:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.mood-pill-active {
+  background: linear-gradient(135deg, rgba(30, 77, 107, 0.16) 0%, rgba(45, 139, 106, 0.14) 100%);
+  border-color: rgba(45, 139, 106, 0.4);
+  box-shadow: 0 14px 35px rgba(45, 139, 106, 0.12);
+}
+
+.result-card {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-sm);
+}
+
+.toast {
+  position: relative;
 }

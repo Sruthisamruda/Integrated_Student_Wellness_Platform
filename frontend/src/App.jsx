@@ -9,7 +9,7 @@ import Sidebar from './components/Sidebar';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
-import MoodTracker from './pages/MoodTracker';
+
 import MoodAssessment from './pages/MoodAssessment';
 import StudyPlanner from './pages/StudyPlanner';
 import Relaxation from './pages/Relaxation';
@@ -108,19 +108,7 @@ export default function App() {
           </PrivateRoute>
         }
       />
-      <Route
-        path="/mood"
-        element={
-          <PrivateRoute>
-            <AppLayout>
-              <ConditionalRoute
-                adminComponent={<MoodAnalytics />}
-                studentComponent={<MoodTracker />}
-              />
-            </AppLayout>
-          </PrivateRoute>
-        }
-      />
+
       <Route
         path="/mood-calendar"
         element={
